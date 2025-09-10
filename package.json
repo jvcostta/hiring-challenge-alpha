@@ -7,7 +7,14 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test": "node test/test.js"
+    "test": "node test/test.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up",
+    "docker:up:detached": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:shell": "docker-compose exec multi-source-ai-agent sh",
+    "docker:test": "docker-compose exec multi-source-ai-agent npm test"
   },
   "keywords": [
     "ai",
