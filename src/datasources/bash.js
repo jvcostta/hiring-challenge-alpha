@@ -13,7 +13,6 @@ export class BashDataSource {
     async initialize() {
         console.log(chalk.gray('    🖥️  Bash execution environment ready'));
         
-        // Create readline interface for user approval
         this.rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
@@ -29,7 +28,6 @@ export class BashDataSource {
             return 'I could not determine an appropriate command to get external data for your question. Please try asking for current information, web data, or system information.';
         }
         
-        // Ask for user approval
         const approved = await this.askUserApproval(command);
         
         if (!approved) {
@@ -40,8 +38,8 @@ export class BashDataSource {
         
         try {
             const { stdout, stderr } = await execAsync(command, { 
-                timeout: 30000, // 30 second timeout
-                maxBuffer: 1024 * 1024 // 1MB buffer
+                timeout: 30000, 
+                maxBuffer: 1024 * 1024 
             });
             
             if (stderr) {
@@ -58,38 +56,38 @@ export class BashDataSource {
     async generateCommand(question) {
         const lowerQuestion = question.toLowerCase();
         
-        // Weather-related commands
+        
         if (lowerQuestion.includes('weather')) {
-            // Using a free weather API
+            
             return 'curl -s "https://wttr.in/?format=3"';
         }
         
-        // Current time/date
+        
         if (lowerQuestion.includes('time') || lowerQuestion.includes('date')) {
             return process.platform === 'win32' ? 'date /t && time /t' : 'date';
         }
         
-        // System information
+        
         if (lowerQuestion.includes('system') || lowerQuestion.includes('computer')) {
             return process.platform === 'win32' ? 'systeminfo | findstr /B /C:"OS Name" /C:"Total Physical Memory"' : 'uname -a && free -h';
         }
         
-        // Network information
+        
         if (lowerQuestion.includes('ip') || lowerQuestion.includes('network')) {
             return 'curl -s "https://ipinfo.io/json"';
         }
         
-        // News or current events (using a simple RSS feed)
+        
         if (lowerQuestion.includes('news') || lowerQuestion.includes('current')) {
             return 'curl -s "https://feeds.bbci.co.uk/news/rss.xml" | head -50';
         }
         
-        // Exchange rates
+        
         if (lowerQuestion.includes('exchange') || lowerQuestion.includes('currency') || lowerQuestion.includes('dollar') || lowerQuestion.includes('euro')) {
             return 'curl -s "https://api.exchangerate-api.com/v4/latest/USD"';
         }
         
-        // Simple web search (using DuckDuckGo instant answer API)
+        
         if (lowerQuestion.includes('search') || lowerQuestion.includes('what is') || lowerQuestion.includes('who is')) {
             const searchTerm = this.extractSearchTerm(question);
             if (searchTerm) {
@@ -97,7 +95,7 @@ export class BashDataSource {
             }
         }
         
-        // Directory listing
+        
         if (lowerQuestion.includes('files') || lowerQuestion.includes('directory') || lowerQuestion.includes('folder')) {
             return process.platform === 'win32' ? 'dir' : 'ls -la';
         }
@@ -106,7 +104,6 @@ export class BashDataSource {
     }
 
     extractSearchTerm(question) {
-        // Try to extract the search term from questions like "What is X?" or "Who is Y?"
         const patterns = [
             /what is (.*?)\\?$/i,
             /who is (.*?)\\?$/i,
@@ -149,7 +146,6 @@ export class BashDataSource {
         
         let response = `External data retrieved:\\n\\n`;
         
-        // Format based on command type
         if (command.includes('wttr.in')) {
             response += `🌤️ **Weather Information:**\\n${output.trim()}`;
         } else if (command.includes('date')) {
@@ -191,7 +187,6 @@ export class BashDataSource {
                 response += `🔍 **Search Data:**\\n${output.trim()}`;
             }
         } else if (command.includes('rss.xml') || command.includes('news')) {
-            // Simple RSS parsing
             const headlines = output.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/g);
             if (headlines && headlines.length > 1) {
                 response += `📰 **Latest News Headlines:**\\n`;
@@ -203,7 +198,6 @@ export class BashDataSource {
                 response += `📰 **News Data:**\\n${output.substring(0, 500)}...`;
             }
         } else {
-            // Generic output formatting
             const truncatedOutput = output.length > 1000 ? output.substring(0, 1000) + '...' : output;
             response += `🔧 **Command Output:**\\n${truncatedOutput}`;
         }

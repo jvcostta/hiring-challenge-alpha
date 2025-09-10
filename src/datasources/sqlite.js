@@ -28,7 +28,6 @@ export class SqliteDataSource {
             try {
                 const db = new sqlite3.Database(dbPath);
                 
-                // Promisify database methods
                 db.allAsync = promisify(db.all.bind(db));
                 db.getAsync = promisify(db.get.bind(db));
                 db.runAsync = promisify(db.run.bind(db));
@@ -83,10 +82,7 @@ export class SqliteDataSource {
     async query(userQuestion) {
         console.log(chalk.blue('🔍 Analyzing question for SQLite query...'));
         
-        // Get all available schemas
         const schemas = await this.getAllSchemas();
-        
-        // Generate SQL query based on the user question and available schemas
         const sqlQuery = await this.generateSqlQuery(userQuestion, schemas);
         
         if (!sqlQuery) {
@@ -111,64 +107,391 @@ export class SqliteDataSource {
     }
 
     async generateSqlQuery(question, schemas) {
-        // Simple query generation based on keywords
-        // In a production system, you might use an LLM to generate SQL queries
-        
         const lowerQuestion = question.toLowerCase();
-        
-        // Default to the first available database (usually 'music')
         const dbName = Object.keys(schemas)[0];
         const schema = schemas[dbName];
         
         if (!schema) return null;
         
         const tables = Object.keys(schema);
+        console.log(chalk.gray(`📋 Available tables: ${tables.join(', ')}`));
+        const tableMapping = this.createTableMapping(tables);
         
-        // Basic query patterns
         if (lowerQuestion.includes('all') || lowerQuestion.includes('list')) {
             if (lowerQuestion.includes('artist')) {
-                return { database: dbName, query: 'SELECT * FROM artists LIMIT 10' };
+                return { database: dbName, query: 'SELECT * FROM Artist ORDER BY Name' };
             }
             if (lowerQuestion.includes('album')) {
-                return { database: dbName, query: 'SELECT * FROM albums LIMIT 10' };
+                return { database: dbName, query: `SELECT Album.AlbumId, Album.Title, Artist.Name as ArtistName 
+                       FROM Album 
+                       INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId 
+                       ORDER BY Artist.Name, Album.Title` };
             }
             if (lowerQuestion.includes('song') || lowerQuestion.includes('track')) {
-                return { database: dbName, query: 'SELECT * FROM tracks LIMIT 10' };
+                return { database: dbName, query: `SELECT Track.TrackId, Track.Name, Album.Title as AlbumTitle, Artist.Name as ArtistName
+                       FROM Track 
+                       INNER JOIN Album ON Track.AlbumId = Album.AlbumId
+                       INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId
+                       ORDER BY Artist.Name, Album.Title, Track.TrackId` };
+            }
+            if (lowerQuestion.includes('customer')) {
+                return { database: dbName, query: 'SELECT * FROM Customer ORDER BY LastName, FirstName' };
+            }
+            if (lowerQuestion.includes('employee')) {
+                return { database: dbName, query: 'SELECT * FROM Employee ORDER BY LastName, FirstName' };
+            }
+            if (lowerQuestion.includes('invoice')) {
+                return { database: dbName, query: `SELECT Invoice.InvoiceId, Invoice.InvoiceDate, Customer.FirstName, Customer.LastName, Invoice.Total
+                       FROM Invoice 
+                       INNER JOIN Customer ON Invoice.CustomerId = Customer.CustomerId
+                       ORDER BY Invoice.InvoiceDate DESC` };
+            }
+            if (lowerQuestion.includes('genre')) {
+                return { database: dbName, query: 'SELECT * FROM Genre ORDER BY Name' };
+            }
+            if (lowerQuestion.includes('playlist')) {
+                return { database: dbName, query: 'SELECT * FROM Playlist ORDER BY Name' };
+            }
+            if (lowerQuestion.includes('mediatype')) {
+                return { database: dbName, query: 'SELECT * FROM MediaType ORDER BY Name' };
+            }
+            if (lowerQuestion.includes('playlisttrack')) {
+                return { database: dbName, query: `SELECT PlaylistTrack.PlaylistId, PlaylistTrack.TrackId, 
+                       Playlist.Name as PlaylistName, Track.Name as TrackName
+                       FROM PlaylistTrack 
+                       INNER JOIN Playlist ON PlaylistTrack.PlaylistId = Playlist.PlaylistId
+                       INNER JOIN Track ON PlaylistTrack.TrackId = Track.TrackId
+                       ORDER BY PlaylistTrack.PlaylistId, PlaylistTrack.TrackId` };
+            }
+            if (lowerQuestion.includes('invoiceline')) {
+                return { database: dbName, query: `SELECT InvoiceLine.InvoiceLineId, InvoiceLine.InvoiceId, 
+                       Track.Name as TrackName, InvoiceLine.UnitPrice, InvoiceLine.Quantity
+                       FROM InvoiceLine 
+                       INNER JOIN Track ON InvoiceLine.TrackId = Track.TrackId
+                       ORDER BY InvoiceLine.InvoiceId, InvoiceLine.InvoiceLineId` };
             }
         }
         
-        if (lowerQuestion.includes('count')) {
+        if (lowerQuestion.includes('count') || lowerQuestion.includes('how many')) {
             if (lowerQuestion.includes('artist')) {
-                return { database: dbName, query: 'SELECT COUNT(*) as count FROM artists' };
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Artist' };
             }
             if (lowerQuestion.includes('album')) {
-                return { database: dbName, query: 'SELECT COUNT(*) as count FROM albums' };
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Album' };
             }
             if (lowerQuestion.includes('song') || lowerQuestion.includes('track')) {
-                return { database: dbName, query: 'SELECT COUNT(*) as count FROM tracks' };
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Track' };
+            }
+            if (lowerQuestion.includes('customer')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Customer' };
+            }
+            if (lowerQuestion.includes('employee')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Employee' };
+            }
+            if (lowerQuestion.includes('invoice')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Invoice' };
+            }
+            if (lowerQuestion.includes('genre')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Genre' };
+            }
+            if (lowerQuestion.includes('playlist')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM Playlist' };
+            }
+            if (lowerQuestion.includes('mediatype')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM MediaType' };
+            }
+            if (lowerQuestion.includes('playlisttrack')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM PlaylistTrack' };
+            }
+            if (lowerQuestion.includes('invoiceline')) {
+                return { database: dbName, query: 'SELECT COUNT(*) as count FROM InvoiceLine' };
             }
         }
         
-        // Search by name
         const nameMatch = lowerQuestion.match(/(?:artist|album|song|track).*?(?:named|called)\\s+['"](.*?)['"]/) ||
                          lowerQuestion.match(/['"](.*?)['"].*?(?:artist|album|song|track)/);
         
         if (nameMatch) {
             const searchTerm = nameMatch[1];
             if (lowerQuestion.includes('artist')) {
-                return { database: dbName, query: `SELECT * FROM artists WHERE name LIKE '%${searchTerm}%'` };
+                return { database: dbName, query: `SELECT * FROM Artist WHERE Name LIKE '%${searchTerm}%'` };
             }
             if (lowerQuestion.includes('album')) {
-                return { database: dbName, query: `SELECT * FROM albums WHERE title LIKE '%${searchTerm}%'` };
+                return { database: dbName, query: `SELECT * FROM Album WHERE Title LIKE '%${searchTerm}%'` };
             }
             if (lowerQuestion.includes('song') || lowerQuestion.includes('track')) {
-                return { database: dbName, query: `SELECT * FROM tracks WHERE name LIKE '%${searchTerm}%'` };
+                return { database: dbName, query: `SELECT * FROM Track WHERE Name LIKE '%${searchTerm}%'` };
             }
         }
         
-        // Default query - show some sample data
+        if (lowerQuestion.includes('album') && lowerQuestion.includes('artist')) {
+            return { 
+                database: dbName, 
+                query: `SELECT Album.Title as AlbumTitle, Artist.Name as ArtistName 
+                       FROM Album 
+                       INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId 
+                       LIMIT 20` 
+            };
+        }
+        
+        if (lowerQuestion.includes('track') && lowerQuestion.includes('album')) {
+            return { 
+                database: dbName, 
+                query: `SELECT Track.Name as TrackName, Album.Title as AlbumTitle, Artist.Name as ArtistName
+                       FROM Track 
+                       INNER JOIN Album ON Track.AlbumId = Album.AlbumId
+                       INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId
+                       LIMIT 20` 
+            };
+        }
+        
+        const firstMatch = lowerQuestion.match(/(?:first|top)\\s+(\\d+)\\s+(\\w+)/);
+        if (firstMatch) {
+            const limit = parseInt(firstMatch[1]);
+            const entity = firstMatch[2].toLowerCase();
+            
+            if (entity.includes('album')) {
+                return { 
+                    database: dbName, 
+                    query: `SELECT Album.AlbumId, Album.Title, Artist.Name as ArtistName 
+                           FROM Album 
+                           INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId 
+                           ORDER BY Album.AlbumId
+                           LIMIT ${limit}` 
+                };
+            }
+            if (entity.includes('artist')) {
+                return { 
+                    database: dbName, 
+                    query: `SELECT * FROM Artist ORDER BY Name LIMIT ${limit}` 
+                };
+            }
+            if (entity.includes('track') || entity.includes('song')) {
+                return { 
+                    database: dbName, 
+                    query: `SELECT Track.Name, Album.Title as AlbumTitle, Artist.Name as ArtistName
+                           FROM Track 
+                           INNER JOIN Album ON Track.AlbumId = Album.AlbumId
+                           INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId
+                           ORDER BY Track.TrackId
+                           LIMIT ${limit}` 
+                };
+            }
+            if (entity.includes('customer')) {
+                return { 
+                    database: dbName, 
+                    query: `SELECT * FROM Customer ORDER BY CustomerId LIMIT ${limit}` 
+                };
+            }
+            if (entity.includes('invoice') && !entity.includes('invoiceline')) {
+                return { 
+                    database: dbName, 
+                    query: `SELECT Invoice.InvoiceId, Invoice.InvoiceDate, Customer.FirstName, Customer.LastName, Invoice.Total
+                           FROM Invoice 
+                           INNER JOIN Customer ON Invoice.CustomerId = Customer.CustomerId
+                           ORDER BY Invoice.InvoiceDate DESC
+                           LIMIT ${limit}` 
+                };
+            }
+            if (entity.includes('invoiceline')) {
+                return { 
+                    database: dbName, 
+                    query: `SELECT InvoiceLine.InvoiceLineId, Track.Name as TrackName, InvoiceLine.UnitPrice, InvoiceLine.Quantity
+                           FROM InvoiceLine 
+                           INNER JOIN Track ON InvoiceLine.TrackId = Track.TrackId
+                           ORDER BY InvoiceLine.InvoiceLineId
+                           LIMIT ${limit}` 
+                };
+            }
+        }
+        
+        if (lowerQuestion.includes('sales') || lowerQuestion.includes('revenue')) {
+            return { 
+                database: dbName, 
+                query: `SELECT Customer.FirstName, Customer.LastName, SUM(Invoice.Total) as TotalSpent
+                       FROM Customer 
+                       INNER JOIN Invoice ON Customer.CustomerId = Invoice.CustomerId
+                       GROUP BY Customer.CustomerId
+                       ORDER BY TotalSpent DESC` 
+            };
+        }
+        
+        if (lowerQuestion.includes('popular') && lowerQuestion.includes('track')) {
+            return { 
+                database: dbName, 
+                query: `SELECT Track.Name, Album.Title, Artist.Name, COUNT(InvoiceLine.TrackId) as TimesPurchased
+                       FROM Track
+                       INNER JOIN Album ON Track.AlbumId = Album.AlbumId
+                       INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId
+                       LEFT JOIN InvoiceLine ON Track.TrackId = InvoiceLine.TrackId
+                       GROUP BY Track.TrackId
+                       ORDER BY TimesPurchased DESC` 
+            };
+        }
+        
+        if (lowerQuestion.includes('tracks') && lowerQuestion.includes('playlist')) {
+            return { 
+                database: dbName, 
+                query: `SELECT Playlist.Name as PlaylistName, COUNT(PlaylistTrack.TrackId) as NumberOfTracks
+                       FROM Playlist 
+                       LEFT JOIN PlaylistTrack ON Playlist.PlaylistId = PlaylistTrack.PlaylistId
+                       GROUP BY Playlist.PlaylistId, Playlist.Name
+                       ORDER BY NumberOfTracks DESC` 
+            };
+        }
+        
+        if (lowerQuestion.includes('format') || (lowerQuestion.includes('media') && lowerQuestion.includes('type'))) {
+            return { 
+                database: dbName, 
+                query: `SELECT MediaType.Name as MediaFormat, COUNT(Track.TrackId) as NumberOfTracks
+                       FROM MediaType 
+                       LEFT JOIN Track ON MediaType.MediaTypeId = Track.MediaTypeId
+                       GROUP BY MediaType.MediaTypeId, MediaType.Name
+                       ORDER BY NumberOfTracks DESC` 
+            };
+        }
+        
+        if (lowerQuestion.includes('detailed') && lowerQuestion.includes('invoice')) {
+            return { 
+                database: dbName, 
+                query: `SELECT Invoice.InvoiceId, Invoice.InvoiceDate, Customer.FirstName, Customer.LastName,
+                       Track.Name as TrackName, InvoiceLine.UnitPrice, InvoiceLine.Quantity,
+                       (InvoiceLine.UnitPrice * InvoiceLine.Quantity) as LineTotal
+                       FROM Invoice 
+                       INNER JOIN Customer ON Invoice.CustomerId = Customer.CustomerId
+                       INNER JOIN InvoiceLine ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+                       INNER JOIN Track ON InvoiceLine.TrackId = Track.TrackId
+                       ORDER BY Invoice.InvoiceDate DESC, Invoice.InvoiceId` 
+            };
+        }
+        
+        if (lowerQuestion.includes('tables') || lowerQuestion.includes('structure')) {
+            return { 
+                database: dbName, 
+                query: `SELECT name as TableName FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name` 
+            };
+        }
+        
+        for (const table of tables) {
+            const lowerTable = table.toLowerCase();
+            if (lowerQuestion.includes(lowerTable)) {
+                if (table === 'PlaylistTrack') {
+                    return { database: dbName, query: `SELECT PlaylistTrack.*, Playlist.Name as PlaylistName, Track.Name as TrackName
+                           FROM PlaylistTrack 
+                           INNER JOIN Playlist ON PlaylistTrack.PlaylistId = Playlist.PlaylistId
+                           INNER JOIN Track ON PlaylistTrack.TrackId = Track.TrackId
+                           ORDER BY PlaylistTrack.PlaylistId, PlaylistTrack.TrackId` };
+                }
+                else if (table === 'InvoiceLine') {
+                    return { database: dbName, query: `SELECT InvoiceLine.*, Track.Name as TrackName
+                           FROM InvoiceLine 
+                           INNER JOIN Track ON InvoiceLine.TrackId = Track.TrackId
+                           ORDER BY InvoiceLine.InvoiceLineId` };
+                }
+                else {
+                    const idColumn = `${table}Id`;
+                    return { database: dbName, query: `SELECT * FROM ${table} ORDER BY ${idColumn}` };
+                }
+            }
+        }
+        
+        for (const [term, tableName] of Object.entries(tableMapping)) {
+            if (lowerQuestion.includes(term)) {
+                if (tableName === 'PlaylistTrack') {
+                    return { database: dbName, query: `SELECT PlaylistTrack.*, Playlist.Name as PlaylistName, Track.Name as TrackName
+                           FROM PlaylistTrack 
+                           INNER JOIN Playlist ON PlaylistTrack.PlaylistId = Playlist.PlaylistId
+                           INNER JOIN Track ON PlaylistTrack.TrackId = Track.TrackId
+                           ORDER BY PlaylistTrack.PlaylistId, PlaylistTrack.TrackId` };
+                }
+                else if (tableName === 'InvoiceLine') {
+                    return { database: dbName, query: `SELECT InvoiceLine.*, Track.Name as TrackName
+                           FROM InvoiceLine 
+                           INNER JOIN Track ON InvoiceLine.TrackId = Track.TrackId
+                           ORDER BY InvoiceLine.InvoiceLineId` };
+                }
+                else {
+                    const idColumn = `${tableName}Id`;
+                    return { database: dbName, query: `SELECT * FROM ${tableName} ORDER BY ${idColumn}` };
+                }
+            }
+        }
+        
+        if (tables.includes('Album')) {
+            return { database: dbName, query: `SELECT Album.Title, Artist.Name FROM Album INNER JOIN Artist ON Album.ArtistId = Artist.ArtistId ORDER BY Artist.Name LIMIT 20` };
+        }
+        
         const firstTable = tables[0];
-        return { database: dbName, query: `SELECT * FROM ${firstTable} LIMIT 5` };
+        return { database: dbName, query: `SELECT * FROM ${firstTable} LIMIT 20` };
+    }
+
+    createTableMapping(tables) {
+        const mapping = {};
+        
+        tables.forEach(table => {
+            const lowerTable = table.toLowerCase();
+            mapping[lowerTable] = table;
+            if (table === 'Artist') {
+                mapping['artists'] = table;
+                mapping['musician'] = table;
+                mapping['musicians'] = table;
+            }
+            if (table === 'Album') {
+                mapping['albums'] = table;
+                mapping['record'] = table;
+                mapping['records'] = table;
+            }
+            if (table === 'Track') {
+                mapping['tracks'] = table;
+                mapping['song'] = table;
+                mapping['songs'] = table;
+                mapping['music'] = table;
+            }
+            if (table === 'Customer') {
+                mapping['customers'] = table;
+                mapping['client'] = table;
+                mapping['clients'] = table;
+            }
+            if (table === 'Invoice') {
+                mapping['invoices'] = table;
+                mapping['sale'] = table;
+                mapping['sales'] = table;
+                mapping['purchase'] = table;
+                mapping['purchases'] = table;
+            }
+            if (table === 'InvoiceLine') {
+                mapping['invoicelines'] = table;
+                mapping['invoiceline'] = table;
+                mapping['lineitem'] = table;
+                mapping['lineitems'] = table;
+            }
+            if (table === 'PlaylistTrack') {
+                mapping['playlisttracks'] = table;
+                mapping['playlisttrack'] = table;
+            }
+            if (table === 'MediaType') {
+                mapping['mediatypes'] = table;
+                mapping['mediatype'] = table;
+                mapping['format'] = table;
+                mapping['formats'] = table;
+            }
+            if (table === 'Genre') {
+                mapping['genres'] = table;
+                mapping['category'] = table;
+                mapping['categories'] = table;
+            }
+            if (table === 'Employee') {
+                mapping['employees'] = table;
+                mapping['staff'] = table;
+                mapping['worker'] = table;
+                mapping['workers'] = table;
+            }
+            if (table === 'Playlist') {
+                mapping['playlists'] = table;
+            }
+        });
+        
+        return mapping;
     }
 
     formatResults(results, originalQuestion) {
@@ -178,7 +501,9 @@ export class SqliteDataSource {
         
         let response = `Found ${results.length} result(s):\\n\\n`;
         
-        results.slice(0, 10).forEach((row, index) => {
+        const maxResults = Math.min(results.length, 100);
+        
+        results.slice(0, maxResults).forEach((row, index) => {
             response += `${index + 1}. `;
             const fields = Object.entries(row)
                 .filter(([key, value]) => value !== null && value !== '')
@@ -187,8 +512,8 @@ export class SqliteDataSource {
             response += fields + '\\n';
         });
         
-        if (results.length > 10) {
-            response += `\\n... and ${results.length - 10} more results.`;
+        if (results.length > maxResults) {
+            response += `\\n... and ${results.length - maxResults} more results.`;
         }
         
         return response;

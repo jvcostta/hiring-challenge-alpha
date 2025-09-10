@@ -1,4 +1,4 @@
-import { ChatOpenAI } from '@langchain/openai';
+import { ChatGroq } from '@langchain/groq';
 import { SqliteDataSource } from './datasources/sqlite.js';
 import { DocumentDataSource } from './datasources/document.js';
 import { BashDataSource } from './datasources/bash.js';
@@ -17,15 +17,13 @@ export class MultiSourceAgent {
     async initialize() {
         console.log(chalk.blue('🔧 Initializing Multi-Source AI Agent...'));
 
-        // Initialize LLM
-        this.llm = new ChatOpenAI({
-            openAIApiKey: process.env.OPENAI_API_KEY,
-            modelName: process.env.MODEL_NAME || 'gpt-4o-mini',
+        this.llm = new ChatGroq({
+            apiKey: process.env.GROQ_API_KEY,
+            model: process.env.MODEL_NAME || 'llama-3.3-70b-versatile',
             temperature: parseFloat(process.env.TEMPERATURE || '0.3'),
-            maxTokens: parseInt(process.env.MAX_TOKENS || '1000'),
+            maxTokens: parseInt(process.env.MAX_TOKENS || '10000'),
         });
 
-        // Initialize data sources
         console.log(chalk.gray('  📊 Initializing data sources...'));
         this.dataSources = {
             sqlite: new SqliteDataSource(),
@@ -33,7 +31,6 @@ export class MultiSourceAgent {
             bash: new BashDataSource(),
         };
 
-        // Initialize each data source
         for (const [name, dataSource] of Object.entries(this.dataSources)) {
             try {
                 await dataSource.initialize();
@@ -43,7 +40,6 @@ export class MultiSourceAgent {
             }
         }
 
-        // Initialize router
         this.router = new ToolRouter(this.llm, this.dataSources);
 
         console.log(chalk.green('✅ Agent initialized successfully!\\n'));
@@ -54,14 +50,11 @@ export class MultiSourceAgent {
         this.conversationHistory.push(humanMessage);
 
         try {
-            // Step 1: Route the message
             console.log(chalk.blue('🧭 Routing message...'));
             const route = await this.router.route(userInput);
             console.log(chalk.blue(`🎯 Selected route: ${route}`));
 
             let dataResult = null;
-
-            // Step 2: Process based on route
             switch (route) {
                 case 'sqlite':
                     dataResult = await this.dataSources.sqlite.query(userInput);
@@ -80,7 +73,6 @@ export class MultiSourceAgent {
                     break;
             }
 
-            // Step 3: Generate response with LLM
             const response = await this.generateResponse(userInput, dataResult, route);
             
             const aiResponse = new AIMessage(response);

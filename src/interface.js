@@ -1,5 +1,6 @@
 import readline from 'readline';
 import chalk from 'chalk';
+import { platform } from 'os';
 
 export class ConversationInterface {
     constructor(agent) {
@@ -9,10 +10,16 @@ export class ConversationInterface {
     }
 
     async start() {
+        const isWindows = platform() === 'win32';
+        const isPowerShell = process.env.PSModulePath !== undefined;
+        
         this.rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout,
-            prompt: chalk.green('💬 You: ')
+            prompt: chalk.green('💬 You: '),
+            terminal: !(isWindows && isPowerShell),
+            historySize: 100,
+            removeHistoryDuplicates: true
         });
 
         this.showWelcomeMessage();
@@ -42,7 +49,7 @@ export class ConversationInterface {
                 console.error(chalk.red('❌ Error:'), error.message);
             }
             
-            console.log(); // Empty line for better readability
+            console.log();
             this.rl.prompt();
         });
 
@@ -85,7 +92,9 @@ export class ConversationInterface {
     showWelcomeMessage() {
         console.log(chalk.green.bold('\\n🚀 Multi-Source AI Agent is ready!'));
         console.log(chalk.gray('I can help you by querying SQLite databases, searching documents, and fetching external data.'));
-        console.log(chalk.gray('Type "help" for commands, "examples" for sample questions, or "quit" to exit.\\n'));
+        console.log(chalk.yellow('📋 Available tables: Artist, Album, Track, Customer, Employee, Invoice, InvoiceLine, Playlist, PlaylistTrack, Genre, MediaType'));
+        console.log(chalk.gray('Type "help" for commands, "examples" for sample questions, or "quit" to exit.'));
+        console.log(chalk.cyan('💡 Pro tip: Be specific! Mention table names like "From the Customer table..." for better results.\\n'));
     }
 
     showHelp() {
@@ -98,31 +107,28 @@ export class ConversationInterface {
     }
 
     showExamples() {
-        console.log(chalk.yellow.bold('\\n💡 Example Questions:'));
-        
-        console.log(chalk.magenta.bold('\\n📊 SQLite Database Queries:'));
-        console.log(chalk.cyan('  • "List all artists in the database"'));
-        console.log(chalk.cyan('  • "How many albums are there?"'));
-        console.log(chalk.cyan('  • "Show me songs by a specific artist"'));
-        console.log(chalk.cyan('  • "What tracks are in the database?"'));
-        
-        console.log(chalk.magenta.bold('\\n📄 Document Search:'));
-        console.log(chalk.cyan('  • "Tell me about Adam Smith"'));
-        console.log(chalk.cyan('  • "What is the invisible hand theory?"'));
-        console.log(chalk.cyan('  • "Explain Keynesian economics"'));
-        console.log(chalk.cyan('  • "Who wrote Das Kapital?"'));
-        
+        console.log(chalk.yellow.bold('\\n💡 Example Questions (Be Specific with Table Names):'));
+
         console.log(chalk.magenta.bold('\\n🌐 External Data (requires approval):'));
-        console.log(chalk.cyan('  • "What\'s the current weather?"'));
         console.log(chalk.cyan('  • "What time is it?"'));
-        console.log(chalk.cyan('  • "Get current exchange rates"'));
         console.log(chalk.cyan('  • "What\'s my IP address?"'));
         
+        console.log(chalk.magenta.bold('\\n📊 Music Database Queries:'));
+        console.log(chalk.cyan('  • "From the Artist table, show me all musicians"'));
+        
+        console.log(chalk.magenta.bold('\\n� Business Data Queries:'));
+        console.log(chalk.cyan('  • "From the Customer table, what is François Tremblay\'s email?"'));
+        
+        console.log(chalk.magenta.bold('\\n� Advanced Music Queries:'));
+        console.log(chalk.cyan('  • "From the Playlist table, show all playlists"'));
+        
+        console.log(chalk.magenta.bold('\\n📄 Document Search:'));
+        console.log(chalk.cyan('  • "Explain Keynesian economics"'));
+
         console.log(chalk.magenta.bold('\\n💬 General Conversation:'));
         console.log(chalk.cyan('  • "Hello, how are you?"'));
-        console.log(chalk.cyan('  • "What can you do?"'));
-        console.log(chalk.cyan('  • "Thank you for your help"'));
         
+        console.log(chalk.gray('\\n💡 Tip: Always specify the table name for better results!'));
         console.log();
     }
 
@@ -131,7 +137,6 @@ export class ConversationInterface {
             console.log(chalk.yellow('\\n👋 Thank you for using the Multi-Source AI Agent!'));
             console.log(chalk.gray('Shutting down...'));
             
-            // Clean up data sources
             if (this.agent && this.agent.dataSources) {
                 if (this.agent.dataSources.sqlite && typeof this.agent.dataSources.sqlite.close === 'function') {
                     this.agent.dataSources.sqlite.close();
