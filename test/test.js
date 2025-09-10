@@ -1,5 +1,8 @@
+import dotenv from 'dotenv';
 import { MultiSourceAgent } from '../src/agent.js';
 import chalk from 'chalk';
+
+dotenv.config();
 
 async function runTests() {
     console.log(chalk.blue.bold('🧪 Running Multi-Source AI Agent Tests\\n'));
@@ -22,10 +25,17 @@ async function runTests() {
         for (const test of sqliteTests) {
             console.log(chalk.cyan(`   Testing: "${test}"`));
             try {
-                const response = await agent.processMessage(test);
-                console.log(chalk.gray(`   Response: ${response.substring(0, 100)}...\\n`));
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Test timeout after 30 seconds')), 30000)
+                );
+                const response = await Promise.race([
+                    agent.processMessage(test),
+                    timeoutPromise
+                ]);
+                console.log(chalk.gray(`   Response: ${response.substring(0, 100)}...`));
+                console.log(chalk.green(`   ✅ Test passed\n`));
             } catch (error) {
-                console.log(chalk.red(`   Error: ${error.message}\\n`));
+                console.log(chalk.red(`   ❌ Error: ${error.message}\n`));
             }
         }
 
@@ -40,10 +50,17 @@ async function runTests() {
         for (const test of documentTests) {
             console.log(chalk.cyan(`   Testing: "${test}"`));
             try {
-                const response = await agent.processMessage(test);
-                console.log(chalk.gray(`   Response: ${response.substring(0, 100)}...\\n`));
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Test timeout after 30 seconds')), 30000)
+                );
+                const response = await Promise.race([
+                    agent.processMessage(test),
+                    timeoutPromise
+                ]);
+                console.log(chalk.gray(`   Response: ${response.substring(0, 100)}...`));
+                console.log(chalk.green(`   ✅ Test passed\n`));
             } catch (error) {
-                console.log(chalk.red(`   Error: ${error.message}\\n`));
+                console.log(chalk.red(`   ❌ Error: ${error.message}\n`));
             }
         }
 
@@ -58,10 +75,17 @@ async function runTests() {
         for (const test of generalTests) {
             console.log(chalk.cyan(`   Testing: "${test}"`));
             try {
-                const response = await agent.processMessage(test);
-                console.log(chalk.gray(`   Response: ${response.substring(0, 100)}...\\n`));
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Test timeout after 30 seconds')), 30000)
+                );
+                const response = await Promise.race([
+                    agent.processMessage(test),
+                    timeoutPromise
+                ]);
+                console.log(chalk.gray(`   Response: ${response.substring(0, 100)}...`));
+                console.log(chalk.green(`   ✅ Test passed\n`));
             } catch (error) {
-                console.log(chalk.red(`   Error: ${error.message}\\n`));
+                console.log(chalk.red(`   ❌ Error: ${error.message}\n`));
             }
         }
 
