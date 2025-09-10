@@ -1,84 +1,179 @@
-# Multi-Source AI Agent Challenge
+# 🤖 Multi-Source AI Agent Challenge
 
-## Challenge Overview
+A sophisticated AI agent that intelligently routes queries across multiple data sources including SQLite databases, text documents, and external bash commands.
 
-Welcome to the Multi-Source AI Agent Challenge! In this project, you'll build an intelligent agent using Node.js and modern LLM frameworks that can answer questions by leveraging multiple data sources including SQLite databases, document files, and web content via bash commands.
+## 🚀 Features
 
-## Challenge Requirements
+This advanced AI agent can:
 
-### Technology Stack
-- Node.js
-- [LangChain](https://js.langchain.com/docs/) - For LLM integration and chains
-- [LangGraph](https://js.langchain.com/docs/langgraph/) - For agent workflow orchestration
+- **Query SQLite databases** with natural language, converting to optimized SQL
+- **Search through text documents** using semantic similarity  
+- **Execute bash commands** safely with user approval for external data
+- **Handle general conversation** with context awareness
+- **Intelligent routing** using LangGraph for optimal data source selection
 
-### Core Features
-Your AI agent must be able to:
+## 📦 Installation
 
-1. **Answer questions using multiple data sources:**
-   - **SQLite databases**: The agent should query `.db` files placed in the `data/sqlite` folder
-   - **Document context**: The agent should extract information from `.txt` files in the `data/documents` folder
-   - **External data**: The agent should be able to run bash commands (with user approval) to gather additional data (e.g., using `curl` to fetch web content)
+1. **Clone and install dependencies**:
 
-2. **Implement a conversational interface** - either in the browser or terminal
+   ```bash
+   npm install
+   ```
 
-3. **Provide intelligent routing** - decide which data source is most appropriate for each question and use the right tools accordingly
+2. **Set up environment**:
 
-### Minimum Viable Product
-Your solution must demonstrate:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API key
+   ```
 
-- A functional agent that can respond to user questions
-- Proper routing between different data sources
-- A clear execution flow with user approval for bash commands
-- Meaningful responses that integrate information from multiple sources when needed
+3. **Start the agent**:
 
-## Submission Guidelines
+   ```bash
+   npm start
+   ```
 
-1. Fork this repository
-2. Implement your solution
-3. Submit a pull request with your implementation
-4. Include detailed instructions on how to run and test your solution
-5. Your code must be 100% functional
+## 🔧 Configuration
 
-## Evaluation Criteria
+Create a `.env` file with:
 
-Your submission will be evaluated based on:
+```env
+GROQ_API_KEY=gsk_your_groq_api_key_here
+MODEL_NAME=llama-3.3-70b-versatile
+TEMPERATURE=0.1
+MAX_TOKENS=2000
+```
 
-- **Functionality**: Does it work as expected? Can it correctly use all three data sources?
-- **Code Quality**: Is the code well-organized, commented, and following best practices?
-- **Error Handling**: How does the agent handle edge cases and errors?
-- **User Experience**: Is the conversation with the agent natural and helpful?
-- **Documentation**: Is the setup and usage well documented?
+## 🎯 How to Use
 
-## Setup Instructions
+Once the agent starts, you can ask questions that will be automatically routed to the appropriate data source. **For best results, be specific and mention table names in your queries.**
 
-Include detailed instructions on how to set up and run your solution. For example:
+### 🎵 Available Database Tables
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Configure environment variables (copy `.env.example` to `.env` and fill in required values)
-4. Add sample databases to the `sqlite` folder
-5. Add sample documents to the `documents` folder
-6. Start the agent: `npm start`
+The music database contains: `Artist`, `Album`, `Track`, `Customer`, `Employee`, `Invoice`, `InvoiceLine`, `Playlist`, `PlaylistTrack`, `Genre`, `MediaType`
 
-## Testing Your Implementation
+### 📊 Music Database Queries
 
-Your README should include instructions on how to test the agent functionality, such as:
+Query the music database with specific table references:
 
-1. Sample questions that query SQLite databases
-2. Sample questions that require document context
-3. Sample questions that would trigger bash commands (and how to approve them)
-4. Examples of questions that combine multiple data sources
+```text
+💬 You: In the Invoice table, show me the top 10 highest sales
+💬 You: From the Customer table, what is François Tremblay's email?
+💬 You: From the Artist table, show me all musicians
+💬 You: From the Playlist table, show all playlists
+💬 You: In the Genre table, what music categories are available?
+```
 
-## Resources
+### 🌐 External Data (with user approval)
 
-- [LangChain JS Documentation](https://js.langchain.com/docs/)
-- [LangGraph Documentation](https://js.langchain.com/docs/langgraph/)
-- [SQLite in Node.js Guide](https://www.sqlitetutorial.net/sqlite-nodejs/)
+Execute bash commands to fetch external data:
 
-## License
+```text
+💬 You: What time is it?
+💬 You: What's my IP address?
+💬 You: Get current exchange rates
+💬 You: What's the current weather?
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+⚠️ **Safety Note**: The agent will ask for your approval before executing any bash commands.
+```
+
+### 📄 Document Search
+
+The agent searches through economics documents:
+
+```text
+💬 You: Tell me about Adam Smith
+💬 You: Who wrote Das Kapital?
+```
+
+
+
+### 💬 General Conversation
+
+Handle general queries:
+
+```text
+💬 You: Hello, how are you?
+💬 You: What tables are available in the database?
+💬 You: Thank you for your help
+```
+
+### 💡 Pro Tips for Better Results
+
+- Always specify the table name: "From the Customer table..."
+- Be specific about what you want to find
+- Use proper names when searching for specific records
+- Type `examples` in the chat for more sample questions
+
+## 🧠 Architecture
+
+The agent uses a sophisticated workflow built with LangGraph:
+
+```text
+User Input → Router → [SQLite|Document|Bash|Direct] → LLM Response → User
+```
+
+### Key Components
+
+- **`MultiSourceAgent`**: Main agent orchestrator using LangGraph
+- **`ToolRouter`**: Intelligent routing based on question analysis
+- **`SqliteDataSource`**: Handles database queries with automatic SQL generation
+- **`DocumentDataSource`**: Semantic search through text documents
+- **`BashDataSource`**: Secure execution of system commands with user approval
+- **`ConversationInterface`**: Interactive terminal interface
+
+## 🎮 Available Commands
+
+While chatting with the agent, you can use these commands:
+
+- `help` - Show available commands
+- `examples` - Display example questions
+- `clear` - Clear the screen
+- `quit` / `exit` / `bye` - Exit the application
+
+## 🧪 Testing Examples
+
+### SQLite Database Tests
+
+```bash
+# Test basic queries
+💬 You: List all artists
+💬 You: Count all albums
+💬 You: Show me track information
+```
+
+## 🛠️ Technology Stack
+
+- **Node.js**: Runtime environment
+- **LangChain**: LLM integration and chains
+- **LangGraph**: Agent workflow orchestration  
+- **SQLite3**: Database operations
+- **Groq API**: Language model with llama-3.3-70b-versatile
+- **Chalk**: Terminal colors and formatting
+
+## 🔒 Security Features
+
+- **User approval required** for all bash command executions
+- **Command timeout** (30 seconds) for external requests
+- **Input validation** and sanitization
+- **Error isolation** - failures in one data source don't affect others
+
+## 📊 Performance Features
+
+- **Concurrent data source initialization**
+- **Intelligent query caching** for documents
+- **Optimized SQL query generation**
+- **Streaming responses** for better UX
+
+## 🚀 What Makes This Implementation Special
+
+1. **True Multi-Source Intelligence**: Seamlessly integrates 3 different data types
+2. **Smart Routing**: Uses LLM-powered routing with keyword fallbacks
+3. **Safety First**: All external commands require explicit user approval
+4. **Production Ready**: Comprehensive error handling and logging
+5. **Extensible**: Easy to add new data sources or modify existing ones
+6. **User Friendly**: Intuitive interface with helpful examples and commands
 
 ---
 
-Good luck with your implementation! We're excited to see your creative solutions to this challenge.
+**Made for Curling-AI: hiring-challenge-alpha** 🚀
