@@ -4,12 +4,11 @@ import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
 
-// Simple implementation without RAG/embeddings to avoid API key dependency.
 // The tool reads the file content into memory and performs a search.
 export class FileTool extends DynamicStructuredTool {
     constructor() {
         super({
-            name: 'file_search', // Renamed to match what the LLM is calling
+            name: 'file_search',
             description: `Searches for a query within the content of pre-loaded text files (e.g., economy_books.txt).
             Use this to answer questions about economics, specific theories, or economists mentioned in the documents.`,
             schema: z.object({
@@ -64,8 +63,6 @@ export class FileTool extends DynamicStructuredTool {
             combinedContent += content + "\n\n";
         }
 
-        // This is a simple keyword search. The real "magic" happens when the LLM
-        // gets this context and formulates an answer.
         const searchRegex = new RegExp(query.split(' ').join('.*'), 'is');
         const match = combinedContent.match(searchRegex);
 

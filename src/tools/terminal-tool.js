@@ -111,7 +111,7 @@ export class TerminalTool extends DynamicStructuredTool {
             'kill', 'taskkill', 'shutdown', 'reboot', 'halt',
             'chmod', 'chown', 'su', 'sudo', 'passwd',
             'nc', 'netcat', 'telnet', 'ssh', 'ftp',
-            'wget -O', 'curl -o', '>', '>>', '|', '&', ';'
+            'wget -O'
         ];
         
         // Check for dangerous patterns
@@ -128,37 +128,6 @@ export class TerminalTool extends DynamicStructuredTool {
         return startsWithSafe || containsSafeUrl;
     }
 
-
-
-    // This function is no longer needed because the agent's workflow now handles the approval loop.
-    // The agent will first ask, and if the user says "yes", the agent will call the tool again.
-    // Our new logic in `executeCommand` handles this two-step process.
-    /*
-    async askUserApproval(command) {
-        return new Promise((resolve) => {
-            const readline = require('readline');
-            const rl = readline.createInterface({
-                input: process.stdin,
-                output: process.stdout
-            });
-
-            console.log(chalk.yellow(`\n⚠️  The agent wants to execute the following command:`));
-            console.log(chalk.cyan(`   ${command}`));
-            console.log(chalk.yellow(`\n⚠️  This will make external requests and run system commands.`));
-            
-            rl.question(chalk.blue('Do you approve this command? (y/N): '), (answer) => {
-                const approved = answer.toLowerCase().startsWith('y');
-                if (approved) {
-                    console.log(chalk.green('✅ Command approved by user'));
-                } else {
-                    console.log(chalk.red('❌ Command denied by user'));
-                }
-                rl.close();
-                resolve(approved);
-            });
-        });
-    }
-    */
 
     formatCommandOutput(output) {
         if (!output || output.trim() === '') {

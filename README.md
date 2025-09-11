@@ -86,15 +86,27 @@ If you can't access the Docker container terminal or prefer simpler setup, use t
    npm test
    ```
 
-## 🔧 Configuration
+## � Getting Your FREE Groq API Key
+
+This agent uses **Groq's lightning-fast LLM inference** to power the AI decision-making. The best part? **It's completely FREE!**
+
+
+### 📝 How to Get Your API Key (2 minutes):
+
+1. **Visit Groq Console**: Go to [https://console.groq.com/home](https://console.groq.com/home)
+2. **Sign up for free**: Create your account (no credit card required)
+3. **Generate API Key**: Navigate to API Keys section and create a new key
+4. **Copy the key**: It will look like `gsk_...` (keep this secure!)
+
+## �🔧 Configuration
 
 Create a `.env` file with your Groq API key:
 
 ```env
 GROQ_API_KEY=gsk_your_groq_api_key_here
-MODEL_NAME=llama-3.3-70b-versatile
-TEMPERATURE=0.1
-MAX_TOKENS=2000
+MODEL_NAME=openai/gpt-oss-120b
+TEMPERATURE=0.3
+MAX_TOKENS=3000
 ```
 
 ## 🎯 How to Use the Agent

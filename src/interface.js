@@ -112,29 +112,22 @@ export class ConversationInterface {
 
         console.log(chalk.magenta.bold('� Music Database Questions:'));
         console.log(chalk.cyan('  • "How many artists are in the database?"'));
-        console.log(chalk.cyan('  • "Show me some albums by The Beatles"'));
         console.log(chalk.cyan('  • "What are the top selling tracks?"'));
         console.log(chalk.cyan('  • "Find customers from Brazil"'));
         console.log(chalk.cyan('  • "List all music genres available"'));
-        console.log(chalk.cyan('  • "Who are the highest paying customers?"'));
-        console.log(chalk.cyan('  • "Show me rock albums from the 1980s"'));
 
         console.log(chalk.magenta.bold('\n🌐 External Data Questions (requires your approval):'));
         console.log(chalk.cyan('  • "What is my IP address?"'));
-        console.log(chalk.cyan('  • "What time is it right now?"'));
+        console.log(chalk.cyan('  • "What is my location?"'));
         console.log(chalk.cyan('  • "Show me today\'s date"'));
         console.log(chalk.cyan('  • "Get current weather information"'));
-        console.log(chalk.cyan('  • "What is the current system information?"'));
         console.log(chalk.gray('    ⚠️  The agent will ask for your permission before running any external commands'));
         
         console.log(chalk.magenta.bold('\n📄 Economics Document Questions:'));
-        console.log(chalk.cyan('  • "Tell me about Adam Smith"'));
+        console.log(chalk.cyan('  • "Tell me about Adam Smith on economy_books.txt file"'));
         console.log(chalk.cyan('  • "What is Keynesian economics?"'));
         console.log(chalk.cyan('  • "Explain the invisible hand theory"'));
-        console.log(chalk.cyan('  • "Who wrote Das Kapital?"'));
-        console.log(chalk.cyan('  • "What are the main economic schools of thought?"'));
-        console.log(chalk.cyan('  • "Explain supply and demand theory"'));
-
+        
         console.log(chalk.magenta.bold('\n💬 General Conversation:'));
         console.log(chalk.cyan('  • "Hello, how are you today?"'));
         console.log(chalk.cyan('  • "What can you help me with?"'));
