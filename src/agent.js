@@ -22,7 +22,7 @@ export class MultiSourceAgent {
         // Initialize LLM
         this.llm = new ChatGroq({
             apiKey: process.env.GROQ_API_KEY,
-            model: process.env.MODEL_NAME || 'llama-3.3-70b-versatile',
+            model: process.env.MODEL_NAME || 'openai/gpt-oss-120b',
             temperature: parseFloat(process.env.TEMPERATURE || '0.3'),
             maxTokens: parseInt(process.env.MAX_TOKENS || '10000'),
         });
@@ -132,14 +132,16 @@ export class MultiSourceAgent {
         
         try {
             // Add system message to guide the LLM's tool usage decisions
-            const systemMessage = new HumanMessage(`You are an intelligent AI agent with access to multiple tools. 
-            
-Your tools:
-1. database_query - Use for questions about music (artists, albums, songs, music data)
-2. file_search - Use for questions about economics, economic theory, economists, economic books
-3. execute_command - Use for current/external information (weather, time, news, system info)
+            const systemMessage = new HumanMessage(`You are an intelligent AI agent with access to multiple tools. Your goal is to assist the user based on their request.
 
-Analyze the user's question and decide which tool(s) to use, if any. If no tools are needed, respond directly.
+Your tools:
+1.  **database_query**: Use for questions about music (artists, albums, songs, music data).
+2.  **file_search**: Use for questions about economics, economic theory, economists, or specific content from the loaded text files.
+3.  **execute_command**: Use for current/external information (e.g., weather, time, news, system info). This tool requires a two-step process:
+    a. First, you must ask the user for permission to execute a specific command.
+    b. If the user replies with "yes" or confirms, you must call the tool again with the exact same command to execute it.
+
+Analyze the user's question and decide which tool(s) to use. If no tools are needed, respond directly.
 
 User question: ${userInput}`);
 

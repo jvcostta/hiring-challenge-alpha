@@ -120,7 +120,7 @@ Create a `.env` file with:
 
 ```env
 GROQ_API_KEY=gsk_your_groq_api_key_here
-MODEL_NAME=llama-3.3-70b-versatile
+MODEL_NAME=openai/gpt-oss-120b
 TEMPERATURE=0.1
 MAX_TOKENS=2000
 ```
@@ -266,7 +266,7 @@ npm test
 - **LangChain**: LLM integration and chains
 - **LangGraph**: Agent workflow orchestration  
 - **SQLite3**: Database operations
-- **Groq API**: Language model with llama-3.3-70b-versatile
+- **Groq API**: Language model with openai/gpt-oss-120b
 - **Chalk**: Terminal colors and formatting
 
 ## 🔒 Security Features

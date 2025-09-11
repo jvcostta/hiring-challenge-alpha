@@ -55,12 +55,20 @@ export class TerminalTool extends DynamicStructuredTool {
             return 'Command rejected for security reasons. Only safe read-only commands for external data are allowed.';
         }
         
-        // Ask for user approval
-        const approved = await this.askUserApproval(agentCommand);
-        
-        if (!approved) {
-            return 'Command execution was cancelled by user.';
+        // This is a critical change: we now handle the user's response.
+        // The agent will first ask for permission. If the user says "yes",
+        // the agent will call the tool AGAIN, but this time we need to bypass the approval.
+        if (!this.pendingApproval) {
+            this.pendingApproval = agentCommand;
+            return `This command requires user approval. Please ask the user for permission to execute: "${agentCommand}"`;
         }
+
+        // If we are here, it means the user has already approved.
+        // We clear the pending approval to avoid re-running without permission.
+        if (this.pendingApproval !== agentCommand) {
+            return `Error: The approved command "${this.pendingApproval}" does not match the current command "${agentCommand}". Aborting for security.`;
+        }
+        this.pendingApproval = null; // Reset after use
         
         console.log(chalk.blue(`🚀 Executing agent command: ${agentCommand}`));
         
@@ -122,6 +130,10 @@ export class TerminalTool extends DynamicStructuredTool {
 
 
 
+    // This function is no longer needed because the agent's workflow now handles the approval loop.
+    // The agent will first ask, and if the user says "yes", the agent will call the tool again.
+    // Our new logic in `executeCommand` handles this two-step process.
+    /*
     async askUserApproval(command) {
         return new Promise((resolve) => {
             const readline = require('readline');
@@ -146,80 +158,15 @@ export class TerminalTool extends DynamicStructuredTool {
             });
         });
     }
+    */
 
-    formatCommandOutput(output, command) {
+    formatCommandOutput(output) {
         if (!output || output.trim() === '') {
             return 'The command executed successfully but returned no output.';
         }
         
-        let response = `External data retrieved:\n\n`;
-        
-        // Smart formatting based on command patterns
-        if (command.includes('wttr.in')) {
-            response += `🌤️ **Weather Information:**\n${output.trim()}`;
-        } else if (command.includes('date') || command.includes('time')) {
-            response += `📅 **Current Date/Time:**\n${output.trim()}`;
-        } else if (command.includes('systeminfo') || command.includes('uname')) {
-            response += `💻 **System Information:**\n${output.trim()}`;
-        } else if (command.includes('ipinfo.io')) {
-            try {
-                const ipData = JSON.parse(output);
-                response += `🌐 **Network Information:**\n`;
-                response += `IP: ${ipData.ip || 'N/A'}\n`;
-                if (ipData.city) response += `Location: ${ipData.city}, ${ipData.region}, ${ipData.country}\n`;
-                if (ipData.org) response += `ISP: ${ipData.org}`;
-            } catch {
-                response += `🌐 **Network Information:**\n${output.trim()}`;
-            }
-        } else if (command.includes('exchangerate-api') || command.includes('exchange')) {
-            try {
-                const rates = JSON.parse(output);
-                response += `💱 **Exchange Rates:**\n`;
-                if (rates.base) response += `Base Currency: ${rates.base}\n`;
-                if (rates.rates) {
-                    const topCurrencies = ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF'];
-                    topCurrencies.forEach(currency => {
-                        if (rates.rates[currency]) {
-                            response += `${currency}: ${rates.rates[currency]}\n`;
-                        }
-                    });
-                }
-            } catch {
-                response += `💱 **Exchange Rate Data:**\n${output.trim()}`;
-            }
-        } else if (command.includes('duckduckgo') || command.includes('search')) {
-            try {
-                const searchData = JSON.parse(output);
-                response += `🔍 **Search Result:**\n`;
-                response += searchData.Abstract || searchData.Answer || 'No direct answer found.';
-            } catch {
-                response += `🔍 **Search Data:**\n${output.trim()}`;
-            }
-        } else if (command.includes('rss') || command.includes('news') || command.includes('feeds')) {
-            // Enhanced RSS parsing
-            const headlines = output.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/g) || 
-                           output.match(/<title>(.*?)<\/title>/g);
-            if (headlines && headlines.length > 1) {
-                response += `📰 **Latest News:**\n`;
-                headlines.slice(1, 6).forEach((headline, index) => {
-                    const title = headline.replace(/<title>|<\/title>|<!\[CDATA\[|\]\]>/g, '');
-                    response += `${index + 1}. ${title.trim()}\n`;
-                });
-            } else {
-                response += `📰 **News Data:**\n${output.substring(0, 500)}${output.length > 500 ? '...' : ''}`;
-            }
-        } else {
-            // Generic output with intelligent truncation
-            const maxLength = 1000;
-            let formattedOutput = output.trim();
-            
-            if (formattedOutput.length > maxLength) {
-                formattedOutput = formattedOutput.substring(0, maxLength) + '\n... (output truncated)';
-            }
-            
-            response += `🔧 **Command Output:**\n${formattedOutput}`;
-        }
-        
-        return response;
+        // Return the raw, untruncated output.
+        // The LLM is responsible for interpreting this and deciding what's important.
+        return `Command executed. Raw output:\n\n${output.trim()}`;
     }
 }
