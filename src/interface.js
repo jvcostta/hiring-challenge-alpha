@@ -137,15 +137,7 @@ export class ConversationInterface {
             console.log(chalk.yellow('\\n👋 Thank you for using the Multi-Source AI Agent!'));
             console.log(chalk.gray('Shutting down...'));
             
-            if (this.agent && this.agent.dataSources) {
-                if (this.agent.dataSources.sqlite && typeof this.agent.dataSources.sqlite.close === 'function') {
-                    this.agent.dataSources.sqlite.close();
-                }
-                if (this.agent.dataSources.bash && typeof this.agent.dataSources.bash.close === 'function') {
-                    this.agent.dataSources.bash.close();
-                }
-            }
-            
+            // Clean shutdown - new tools don't require explicit closing
             this.isRunning = false;
         }
         
