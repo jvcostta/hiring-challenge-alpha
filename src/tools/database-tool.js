@@ -10,28 +10,41 @@ export class DatabaseTool extends DynamicStructuredTool {
     constructor() {
         super({
             name: 'database_query',
-            description: `Execute SQL queries on a music database. 
-            Essential for answering any questions about artists, albums, or tracks.
-            The input to this tool MUST be a valid SQLite SQL query.
-            
-            Database schema:
+            description: `You are an expert SQL assistant for a music database.
+- ALWAYS generate syntactically correct SQLite queries.
+- Only SELECT queries are allowed (NO INSERT, UPDATE, DELETE, DROP).
+- Use explicit SELECT columns instead of SELECT *.
+- Use table aliases (e.g., ar, a, t) for clarity in JOINs.
+- When filtering text, prefer "LIKE '%term%'" instead of "=" for robustness.
+- Return aggregated values using COUNT, SUM, AVG, etc., if the user asks for totals, averages, or counts.
+- Use LIMIT 10 for large result sets unless the user explicitly asks for all.
+- The database schema is:
 
-            - Table "Artist": columns (ArtistId, Name)
-            - Table "Album": columns (AlbumId, Title, ArtistId)
-            - Table "Track": columns (TrackId, Name, AlbumId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice)
-            - Table "Genre": columns (GenreId, Name)
-            - Table "MediaType": columns (MediaTypeId, Name)
-            - Table "Playlist": columns (PlaylistId, Name)
-            - Table "PlaylistTrack": columns (PlaylistId, TrackId)
-            - Table "Invoice": columns (InvoiceId, CustomerId, InvoiceDate, BillingAddress, BillingCity, BillingState, BillingCountry, BillingPostalCode, Total)
-            - Table "InvoiceLine": columns (InvoiceLineId, InvoiceId, TrackId, UnitPrice, Quantity)
-            - Table "Customer": columns (CustomerId, FirstName, LastName, Company, Address, City, State, Country, PostalCode, Phone, Fax, Email, SupportRepId)
-            - Table "Employee": columns (EmployeeId, LastName, FirstName, Title, ReportsTo, BirthDate, HireDate, Address, City, State, Country, PostalCode, Phone, Fax, Email)
-            
-            Use JOINs when the question involves multiple tables.
-            Example: "What are the Beatles' albums?" -> Generated SQL query: "SELECT Album.Title FROM Artist JOIN Album ON Artist.ArtistId = Album.ArtistId WHERE Artist.Name LIKE '%Beatles%'"
-            
-            IMPORTANT: You are the agent responsible for ALL SQL logic. Generate complete, valid SQL queries based on the user's natural language request.`,
+Artist(ArtistId, Name)
+Album(AlbumId, Title, ArtistId)
+Track(TrackId, Name, AlbumId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice)
+Genre(GenreId, Name)
+MediaType(MediaTypeId, Name)
+Playlist(PlaylistId, Name)
+PlaylistTrack(PlaylistId, TrackId)
+Invoice(InvoiceId, CustomerId, InvoiceDate, BillingAddress, BillingCity, BillingState, BillingCountry, BillingPostalCode, Total)
+InvoiceLine(InvoiceLineId, InvoiceId, TrackId, UnitPrice, Quantity)
+Customer(CustomerId, FirstName, LastName, Company, Address, City, State, Country, PostalCode, Phone, Fax, Email, SupportRepId)
+Employee(EmployeeId, LastName, FirstName, Title, ReportsTo, BirthDate, HireDate, Address, City, State, Country, PostalCode, Phone, Fax, Email)
+
+Examples:
+Q: "What are the Beatles' albums?"
+SQL: SELECT a.Title FROM Artist ar JOIN Album a ON ar.ArtistId = a.ArtistId WHERE ar.Name LIKE '%Beatles%';
+
+Q: "How many tracks are in the database?"
+SQL: SELECT COUNT(*) as count FROM Track;
+
+Q: "List customers from Brazil"
+SQL: SELECT FirstName, LastName, Email FROM Customer WHERE Country = 'Brazil';
+
+Q: "Top 5 longest tracks"
+SQL: SELECT Name, Milliseconds FROM Track ORDER BY Milliseconds DESC LIMIT 5;
+            `,
             schema: z.object({
                 sqlQuery: z.string().describe("The complete and valid SQLite SQL query to execute."),
             }),
@@ -81,6 +94,11 @@ export class DatabaseTool extends DynamicStructuredTool {
 
     async executeQuery(sqlQuery) {
         try {
+            // Safety check: block write operations
+            if (/drop|delete|update|insert/i.test(sqlQuery)) {
+                return '⚠️ Write operations (INSERT, UPDATE, DELETE, DROP) are not allowed. Only SELECT queries are permitted.';
+            }
+
             // Get the first available database (assuming it's the music database)
             const dbName = Array.from(this.databases.keys())[0];
             const db = this.databases.get(dbName);
@@ -94,23 +112,25 @@ export class DatabaseTool extends DynamicStructuredTool {
             const results = await db.allAsync(sqlQuery);
             
             if (results.length === 0) {
-                return 'No results found for your query.';
+                return `Executed SQL: ${sqlQuery}\n\nNo results found for your query.`;
             }
             
-            return this.formatResults(results);
+            return this.formatResults(sqlQuery, results);
         } catch (error) {
             const errorMessage = error.message;
             console.error(chalk.red('      ❌ Database query error:'), errorMessage);
-            return `Database query error: ${errorMessage}. Please check if the SQL query is correct and try again.`;
+            return `❌ SQL Error: ${errorMessage}.
+Executed SQL: ${sqlQuery}
+💡 Tip: Check table/column names against the schema. Remember: this is SQLite, not MySQL/Postgres.`;
         }
     }
 
-    formatResults(results) {
+    formatResults(sqlQuery, results) {
         if (results.length === 1 && results[0].count !== undefined) {
-            return `The result is ${results[0].count}.`;
+            return `Executed SQL: ${sqlQuery}\n\nThe result is ${results[0].count}.`;
         }
         
-        let response = `Found ${results.length} result(s):\n\n`;
+        let response = `Executed SQL: ${sqlQuery}\n\nFound ${results.length} result(s):\n\n`;
         
         // Limit display to avoid overwhelming the LLM context
         results.slice(0, 10).forEach((row, index) => {
