@@ -90,15 +90,15 @@ export class ConversationInterface {
     }
 
     showWelcomeMessage() {
-        console.log(chalk.green.bold('\\n🚀 Multi-Source AI Agent is ready!'));
+        console.log(chalk.green.bold('\n🚀 Multi-Source AI Agent is ready!'));
         console.log(chalk.gray('I can help you by querying SQLite databases, searching documents, and fetching external data.'));
-        console.log(chalk.yellow('📋 Available tables: Artist, Album, Track, Customer, Employee, Invoice, InvoiceLine, Playlist, PlaylistTrack, Genre, MediaType'));
+        console.log(chalk.yellow('\n 📋 Available tables: Artist, Album, Track, Customer, Employee, Invoice, InvoiceLine, Playlist, PlaylistTrack, Genre, MediaType'));
         console.log(chalk.gray('Type "help" for commands, "examples" for sample questions, or "quit" to exit.'));
-        console.log(chalk.cyan('💡 Pro tip: Be specific! Mention table names like "From the Customer table..." for better results.\\n'));
+        console.log(chalk.cyan('\n\n💡 Pro tip: Be specific! Mention table names like "From the Customer table..." for better results.\\n'));
     }
 
     showHelp() {
-        console.log(chalk.yellow.bold('\\n📖 Available Commands:'));
+        console.log(chalk.yellow.bold('\n📖 Available Commands:'));
         console.log(chalk.cyan('  help     ') + chalk.gray('- Show this help message'));
         console.log(chalk.cyan('  examples ') + chalk.gray('- Show example questions'));
         console.log(chalk.cyan('  clear    ') + chalk.gray('- Clear the screen'));
@@ -107,29 +107,40 @@ export class ConversationInterface {
     }
 
     showExamples() {
-        console.log(chalk.yellow.bold('\\n💡 Example Questions (Be Specific with Table Names):'));
+        console.log(chalk.yellow.bold('\n💡 Example Questions - Ask Naturally!'));
+        console.log(chalk.gray('The AI agent will automatically decide which tool to use based on your question.\\n'));
 
-        console.log(chalk.magenta.bold('\\n🌐 External Data (requires approval):'));
-        console.log(chalk.cyan('  • "What time is it?"'));
-        console.log(chalk.cyan('  • "What\'s my IP address?"'));
-        
-        console.log(chalk.magenta.bold('\\n📊 Music Database Queries:'));
-        console.log(chalk.cyan('  • "From the Artist table, show me all musicians"'));
-        
-        console.log(chalk.magenta.bold('\\n� Business Data Queries:'));
-        console.log(chalk.cyan('  • "From the Customer table, what is François Tremblay\'s email?"'));
-        
-        console.log(chalk.magenta.bold('\\n� Advanced Music Queries:'));
-        console.log(chalk.cyan('  • "From the Playlist table, show all playlists"'));
-        
-        console.log(chalk.magenta.bold('\\n📄 Document Search:'));
-        console.log(chalk.cyan('  • "Explain Keynesian economics"'));
+        console.log(chalk.magenta.bold('� Music Database Questions:'));
+        console.log(chalk.cyan('  • "How many artists are in the database?"'));
+        console.log(chalk.cyan('  • "Show me some albums by The Beatles"'));
+        console.log(chalk.cyan('  • "What are the top selling tracks?"'));
+        console.log(chalk.cyan('  • "Find customers from Brazil"'));
+        console.log(chalk.cyan('  • "List all music genres available"'));
+        console.log(chalk.cyan('  • "Who are the highest paying customers?"'));
+        console.log(chalk.cyan('  • "Show me rock albums from the 1980s"'));
 
-        console.log(chalk.magenta.bold('\\n💬 General Conversation:'));
-        console.log(chalk.cyan('  • "Hello, how are you?"'));
+        console.log(chalk.magenta.bold('\n🌐 External Data Questions (requires your approval):'));
+        console.log(chalk.cyan('  • "What is my IP address?"'));
+        console.log(chalk.cyan('  • "What time is it right now?"'));
+        console.log(chalk.cyan('  • "Show me today\'s date"'));
+        console.log(chalk.cyan('  • "Get current weather information"'));
+        console.log(chalk.cyan('  • "What is the current system information?"'));
+        console.log(chalk.gray('    ⚠️  The agent will ask for your permission before running any external commands'));
         
-        console.log(chalk.gray('\\n💡 Tip: Always specify the table name for better results!'));
-        console.log();
+        console.log(chalk.magenta.bold('\n📄 Economics Document Questions:'));
+        console.log(chalk.cyan('  • "Tell me about Adam Smith"'));
+        console.log(chalk.cyan('  • "What is Keynesian economics?"'));
+        console.log(chalk.cyan('  • "Explain the invisible hand theory"'));
+        console.log(chalk.cyan('  • "Who wrote Das Kapital?"'));
+        console.log(chalk.cyan('  • "What are the main economic schools of thought?"'));
+        console.log(chalk.cyan('  • "Explain supply and demand theory"'));
+
+        console.log(chalk.magenta.bold('\n💬 General Conversation:'));
+        console.log(chalk.cyan('  • "Hello, how are you today?"'));
+        console.log(chalk.cyan('  • "What can you help me with?"'));
+        console.log(chalk.cyan('  • "What tables are available in the database?"'));
+        console.log(chalk.cyan('  • "Thank you for your assistance"\n'));
+        
     }
 
     shutdown() {
